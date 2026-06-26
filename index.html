@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orienteur PTH — BBS Finance</title>
+<style>
+:root {
+  --navy:#1A2340;--navy2:#243057;--gold:#B8956A;--gold2:#D4AF8A;
+  --cream:#F7F4EF;--white:#FFFFFF;
+  --ok:#1E6B45;--ok-bg:#D4EDDA;
+  --warn:#8B5A00;--warn-bg:#FFF3CD;
+  --ko:#8B1A1A;--ko-bg:#FFDEDE;
+  --border:#DDD5C8;--text:#1A2340;--muted:#6B6B6B;
+  --r:10px;--sh:0 2px 12px rgba(26,35,64,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--cream);color:var(--text);}
+header{background:var(--navy);padding:14px 26px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.logo-text{font-size:1.1rem;font-weight:800;color:#fff;letter-spacing:.04em;}
+.logo-sub{font-size:.7rem;color:var(--gold2);letter-spacing:.1em;text-transform:uppercase;margin-top:2px;}
+.hsep{width:1px;height:30px;background:rgba(255,255,255,.2);margin:0 6px;}
+.htitle{font-size:.88rem;color:rgba(255,255,255,.75);}
+.hbadge{margin-left:auto;background:var(--gold);color:#fff;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.06em;}
+.container{max-width:960px;margin:0 auto;padding:24px 16px 60px;}
+.intro{background:var(--navy2);color:#fff;border-radius:var(--r);padding:14px 20px;margin-bottom:20px;font-size:.82rem;line-height:1.65;border-left:4px solid var(--gold);}
+.intro strong{color:var(--gold2);}
+.card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);padding:22px 22px 18px;margin-bottom:16px;}
+.stitle{font-size:.66rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.full{grid-column:1/-1;}
+.fgroup{display:flex;flex-direction:column;gap:4px;}
+label{font-size:.78rem;font-weight:600;}
+label .hint{font-weight:400;color:var(--muted);font-size:.72rem;}
+select,input[type=number],input[type=text]{border:1.5px solid var(--border);border-radius:7px;padding:7px 9px;font-size:.84rem;color:var(--text);background:var(--white);width:100%;appearance:none;transition:border-color .15s;}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B6B6B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;padding-right:26px;}
+select:focus,input:focus{outline:none;border-color:var(--gold);}
+.ctarow{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap;}
+.btn-primary{background:var(--navy);color:#fff;border:none;border-radius:8px;padding:10px 24px;font-size:.88rem;font-weight:700;cursor:pointer;flex:1;min-width:160px;transition:background .15s;}
+.btn-primary:hover{background:var(--navy2);}
+.btn-secondary{background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:8px;padding:10px 16px;font-size:.82rem;cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{border-color:var(--navy);color:var(--navy);}
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;flex-wrap:wrap;}
+.tab{padding:9px 18px;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold);}
+.tab-content{display:none;} .tab-content.active{display:block;}
+/* RESULTS */
+#results{display:none;margin-top:8px;}
+.rhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.rhead h2{font-size:.98rem;font-weight:800;color:var(--navy);}
+.rsumm{font-size:.76rem;color:var(--muted);background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:4px 11px;}
+.bcard{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:12px;overflow:hidden;border:2px solid transparent;}
+.bcard.eligible{border-color:var(--ok);}
+.bcard.warning{border-color:var(--warn);}
+.bcard.excluded{border-color:var(--ko);}
+.bhead{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;gap:8px;flex-wrap:wrap;}
+.bname{font-size:.92rem;font-weight:800;color:var(--navy);}
+.btype{font-size:.7rem;color:var(--muted);margin-top:1px;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;font-weight:700;padding:4px 11px;border-radius:20px;white-space:nowrap;}
+.badge.ok{background:var(--ok-bg);color:var(--ok);}
+.badge.warn{background:var(--warn-bg);color:var(--warn);}
+.badge.ko{background:var(--ko-bg);color:var(--ko);}
+.bbody{padding:0 16px 15px;}
+.mbox{background:var(--cream);border-radius:8px;padding:9px 13px;margin-bottom:11px;display:flex;align-items:center;gap:11px;flex-wrap:wrap;}
+.mval{font-size:1.28rem;font-weight:800;color:var(--navy);}
+.mlabel{font-size:.72rem;color:var(--muted);line-height:1.4;}
+.mrh{font-size:.76rem;font-weight:700;color:var(--gold);background:rgba(184,149,106,.12);padding:3px 9px;border-radius:10px;}
+.subsec{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:9px 0 5px;}
+.ilist{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.ilist li{display:flex;align-items:flex-start;gap:6px;font-size:.80rem;line-height:1.45;}
+.ic{flex-shrink:0;font-size:.82rem;margin-top:1px;}
+/* SIMULATION TABLE */
+.sim-section{margin-top:13px;}
+.sim-title{font-size:.72rem;font-weight:700;color:var(--navy);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px;}
+.sim-table{width:100%;border-collapse:collapse;font-size:.78rem;}
+.sim-table th{background:var(--navy);color:#fff;padding:6px 10px;text-align:left;font-weight:600;font-size:.72rem;}
+.sim-table td{padding:6px 10px;border-bottom:1px solid var(--border);}
+.sim-table tr:last-child td{border-bottom:none;}
+.sim-table tr:nth-child(even) td{background:var(--cream);}
+.sim-table .taux-cell{color:var(--gold);font-weight:700;}
+.sim-note{font-size:.7rem;color:var(--muted);margin-top:5px;font-style:italic;}
+.infine-warn{background:var(--warn-bg);border:1px solid #E6C97A;border-radius:6px;padding:7px 11px;font-size:.78rem;color:var(--warn);margin-top:8px;line-height:1.5;}
+/* DETAIL */
+.dtoggle{font-size:.73rem;color:var(--gold);font-weight:700;border:none;background:none;cursor:pointer;padding:0;margin-top:9px;display:inline-flex;align-items:center;gap:3px;}
+.dpanel{display:none;margin-top:9px;background:var(--cream);border-radius:8px;padding:11px 13px;}
+.dpanel.open{display:block;}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px 13px;}
+.dk{font-size:.72rem;font-weight:700;color:var(--text);}
+.dv{font-size:.72rem;color:var(--muted);}
+.dnote{margin-top:9px;padding-top:7px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);line-height:1.5;}
+/* SIMULATIONS ENREGISTRÉES */
+.saved-empty{text-align:center;color:var(--muted);font-size:.84rem;padding:30px 20px;}
+.saved-card{background:var(--white);border-radius:var(--r);box-shadow:var(--sh);padding:16px 18px;margin-bottom:12px;border-left:4px solid var(--gold);}
+.saved-meta{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.saved-name{font-size:.9rem;font-weight:800;color:var(--navy);}
+.saved-date{font-size:.72rem;color:var(--muted);}
+.saved-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.saved-tag{font-size:.7rem;padding:2px 8px;border-radius:10px;font-weight:600;}
+.saved-tag.ok{background:var(--ok-bg);color:var(--ok);}
+.saved-tag.ko{background:var(--ko-bg);color:var(--ko);}
+.saved-tag.warn{background:var(--warn-bg);color:var(--warn);}
+.saved-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.btn-sm{padding:5px 12px;font-size:.75rem;border-radius:6px;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--text);transition:all .15s;}
+.btn-sm:hover{border-color:var(--navy);color:var(--navy);}
+.btn-sm.danger{color:var(--ko);border-color:var(--ko-bg);}
+.btn-sm.danger:hover{background:var(--ko-bg);}
+@media(max-width:580px){.fg,.fg3,.dgrid{grid-template-columns:1fr;}.full{grid-column:1;}.container{padding:14px 11px 50px;}.card{padding:16px 13px;}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo-text">BBS Finance</div><div class="logo-sub">Partners Premium</div></div>
+  <div class="hsep"></div>
+  <div class="htitle">Orienteur PTH</div>
+  <div class="hbadge">CFCAL · MMB · Bank B · CMT</div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('t-form')">🔍 Nouvelle simulation</div>
+    <div class="tab" onclick="showTab('t-saved')">📁 Simulations enregistrées <span id="saved-count-badge"></span></div>
+  </div>
+
+  <!-- TAB FORMULAIRE -->
+  <div id="t-form" class="tab-content active">
+    <div class="intro">
+      Remplis le formulaire pour orienter un dossier PTH. L'outil calcule l'éligibilité par banque et simule automatiquement les mensualités en amortissable et in fine.<br>
+      <strong>Note :</strong> Un prêt existant avec garantie par <em>caution organisme</em> (Crédit Logement, CAMCA…) ne constitue pas une inscription hypothécaire et n'empêche pas Bank B de prendre une garantie hypothécaire — sauf si Bank B exige un bien sans aucun crédit existant sur ce bien (vérifier cas par cas).
+    </div>
+
+    <div class="card">
+      <div class="stitle">Profil emprunteur</div>
+      <div class="fg">
+        <div class="fgroup"><label>Statut professionnel</label>
+          <select id="profession">
+            <option value="">— Sélectionner —</option>
+            <option value="salarie">Salarié</option>
+            <option value="retraite">Retraité / Pensionné</option>
+            <option value="fonctionnaire">Fonctionnaire</option>
+            <option value="liberal">Profession libérale</option>
+            <option value="artisan">Artisan / Commerçant</option>
+            <option value="gerant">Gérant de société (SARL/SAS…)</option>
+            <option value="gerant_sci">Gérant de SCI uniquement</option>
+            <option value="courtier">Courtier en crédits</option>
+            <option value="rentier">Rentier</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Situation</label>
+          <select id="situation">
+            <option value="seul">Seul</option>
+            <option value="couple">Couple / 2 emprunteurs</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Âge du plus jeune emprunteur</label>
+          <input type="number" id="age" min="18" max="90" placeholder="ex. 62">
+        </div>
+        <div class="fgroup"><label>Durée souhaitée <span class="hint">(ans)</span></label>
+          <input type="number" id="duree" min="1" max="30" placeholder="ex. 15">
+        </div>
+        <div class="fgroup"><label>Résidence fiscale</label>
+          <select id="fiscal">
+            <option value="fr">France métropolitaine</option>
+            <option value="drom">DROM-COM</option>
+            <option value="etranger">Hors France</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Rejets / impayés en cours</label>
+          <select id="rejets"><option value="non">Non</option><option value="oui">Oui</option></select>
+        </div>
+        <div class="fgroup"><label>Procédure collective (RJ/LJ) en cours</label>
+          <select id="procedure"><option value="non">Non</option><option value="oui">Oui</option></select>
+        </div>
+        <div class="fgroup"><label>Multi-propriétaire <span class="hint">(détient d'autres biens)</span></label>
+          <select id="multi"><option value="oui">Oui — multipropriétaire</option><option value="non">Non — monopropriétaire</option></select>
+        </div>
+        <div class="fgroup"><label>Patrimoine financier disponible <span class="hint">(AV, PER, épargne…)</span></label>
+          <select id="patri_fi">
+            <option value="oui">Oui — AV / PER / épargne significative</option>
+            <option value="non">Non — aucun patrimoine financier</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Enfants à charge</label>
+          <input type="number" id="enfants" min="0" max="10" value="0">
+        </div>
+        <div class="fgroup"><label>Endettement actuel <span class="hint">(avant opération)</span></label>
+          <select id="endettement_actuel">
+            <option value="inf35">Inférieur à 35%</option>
+            <option value="inf40">35% à 40%</option>
+            <option value="sup40">Supérieur à 40%</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Avis d'imposition <span class="hint">(reflet des revenus actuels ?)</span></label>
+          <select id="ai_ok">
+            <option value="oui">Oui — AI cohérent avec les revenus actuels</option>
+            <option value="zero">Non — AI à zéro ou ne reflète pas les revenus actuels</option>
+            <option value="partiel">Partiel — revenus récents non encore déclarés</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Nom du client <span class="hint">(pour enregistrement)</span></label>
+          <input type="text" id="nom_client" placeholder="ex. BOUDALLAH Khadir">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stitle">Projet & financement</div>
+      <div class="fg">
+        <div class="fgroup"><label>Objet principal du financement</label>
+          <select id="objet">
+            <option value="">— Sélectionner —</option>
+            <optgroup label="But immobilier">
+              <option value="acq_immo">Acquisition immo (RP/RS/locatif)</option>
+              <option value="soulte">Soulte / Sortie d'indivision</option>
+              <option value="travaux_moins75">Travaux ≤ 75 000€</option>
+              <option value="travaux_plus75">Travaux 75 001€ → 300 000€</option>
+              <option value="terrain">Terrain seul</option>
+            </optgroup>
+            <optgroup label="But mobilier / trésorerie">
+              <option value="tresorerie">Trésorerie / Liquidités</option>
+              <option value="donation">Donation (ascendants/descendants)</option>
+              <option value="succession">Droits de succession</option>
+              <option value="dette_fiscale">Dette fiscale / sociale</option>
+              <option value="dette_privee">Dette privée</option>
+              <option value="vehicule">Véhicule / Bateau / Loisir</option>
+              <option value="scpi">Financement parts SCPI</option>
+            </optgroup>
+            <optgroup label="But professionnel">
+              <option value="cca_apport">Apport en compte courant d'associé</option>
+              <option value="cca_remb">Remboursement / Rachat CCA</option>
+              <option value="investissement_pro">Investissement professionnel</option>
+            </optgroup>
+            <optgroup label="Exclusions fréquentes">
+              <option value="rachat_conso">Rachat de crédits conso</option>
+              <option value="vefa">VEFA / Construction neuve</option>
+              <option value="loa">Reprise LOA avant 13e loyer</option>
+              <option value="reconstitution_epargne">Reconstitution d'épargne pure</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="fgroup"><label>Montant demandé (€)</label>
+          <input type="number" id="montant" min="0" placeholder="ex. 250000">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stitle">Garantie immobilière</div>
+      <div class="fg3">
+        <div class="fgroup"><label>Département du bien en garantie</label>
+          <input type="text" id="dep" placeholder="ex. 42, 06, 75008…">
+        </div>
+        <div class="fgroup"><label>Valeur estimée / expertisée (€)</label>
+          <input type="number" id="valeur" min="0" placeholder="ex. 980000">
+        </div>
+        <div class="fgroup"><label>Capital restant dû sur ce bien (€)</label>
+          <input type="number" id="crd" min="0" value="0" placeholder="0">
+        </div>
+        <div class="fgroup"><label>Garantie du prêt existant sur ce bien</label>
+          <select id="garantie_type">
+            <option value="aucune">Aucun prêt en cours sur ce bien</option>
+            <option value="caution">Caution organisme (Crédit Logement, CAMCA, CMH…)</option>
+            <option value="hypotheque">Garantie hypothécaire inscrite</option>
+            <option value="inconnu">Non vérifié / Inconnu</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Type de bien offert en garantie</label>
+          <select id="type_bien">
+            <option value="habitation">Résidence (RP / RS / locatif)</option>
+            <option value="mixte_hab_sup">Bien mixte — surface hab. > surface pro</option>
+            <option value="mixte_pro_sup">Bien mixte — surface pro ≥ surface hab.</option>
+            <option value="pro_bureau">Bureau / Boutique centre-ville</option>
+            <option value="pro_autre">Bien pro autre (entrepôt, agricole…)</option>
+            <option value="garage_seul">Garage / Parking seul</option>
+            <option value="drom">Bien en DROM-COM</option>
+            <option value="chateau">Château (mentionné dans le titre)</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Propriété du bien</label>
+          <select id="propriete">
+            <option value="pleine">Pleine propriété (≥ 50%)</option>
+            <option value="indivision_autre">Indivision — pleine propriété d'un autre bien</option>
+            <option value="nue">Nue-propriété</option>
+            <option value="moins50">Indivision < 50%</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Valeur du bien ≥ 300 000€ ?</label>
+          <select id="valeur_mini"><option value="oui">Oui</option><option value="non">Non (< 300 000€)</option></select>
+        </div>
+        <div class="fgroup"><label>Rang souhaité</label>
+          <select id="rang">
+            <option value="premier">1er rang uniquement</option>
+            <option value="indifferent">1er ou 2nd rang accepté</option>
+          </select>
+        </div>
+        <div class="fgroup"><label>Bien acquis avant 2007 ?</label>
+          <select id="avant2007">
+            <option value="non">Non (2007 ou après)</option>
+            <option value="oui">Oui (avant 2007)</option>
+            <option value="inconnu">Non vérifié</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="ctarow">
+      <button class="btn-primary" onclick="analyser()">🔍 Analyser & simuler</button>
+      <button class="btn-secondary" onclick="resetForm()">Réinitialiser</button>
+    </div>
+
+    <div id="results">
+      <div class="rhead">
+        <h2>Résultats de l'analyse</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <div class="rsumm" id="rsumm"></div>
+          <button class="btn-secondary" id="btn-save" onclick="saveSimulation()" style="display:none;font-size:.78rem;padding:5px 14px;">💾 Enregistrer</button>
+        </div>
+      </div>
+      <div id="cards"></div>
+    </div>
+  </div>
+
+  <!-- TAB SIMULATIONS ENREGISTRÉES -->
+  <div id="t-saved" class="tab-content">
+    <div class="card">
+      <div class="stitle">Simulations enregistrées</div>
+      <div id="saved-list"><div class="saved-empty">Aucune simulation enregistrée pour l'instant.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// TAUX EN VIGUEUR (source : grilles partenaires connues, indicatifs)
+// Amortissable PTH et In fine PTH — juin 2026
+// ============================================================
+const TAUX = {
+  amort: { 10:4.80, 12:4.90, 15:5.10, 20:5.30, 25:5.50 },
+  infine: { 5:5.20, 7:5.30, 10:5.50, 12:5.60, 15:5.80, 20:6.00 }
+};
+// Note taux CMT Griffon Patrimoine IMMO : in fine basé taux usure prêts immo < 10 ans
+
+// ============================================================
+// BANQUES
+// ============================================================
+const BANQUES = [
+{
+  id:"bankb_conso",nom:"Bank B",produit:"Trésorerie / Mobilier / Pro",
+  type_produit:"conso",
+  professions_ok:["salarie","retraite","fonctionnaire","liberal","artisan","gerant","gerant_sci","rentier"],
+  professions_ko:["courtier"],
+  montant_min:100000,montant_max:null,
+  durees_amort:[10,12,15,20,25],
+  durees_infine_mobilier:[5,7,10,12,15],
+  durees_infine_pro:[3,5,7,10,12,15],
+  age_fin:95,endettement_max:45,
+  rav:{multi_seul:1500,multi_couple:2000,mono_seul:2000,mono_couple:2500,enfant:200},
+  rh_type:"zones",
+  bien_libre_requis:false,
+  second_rang:false,
+  garantie_ko_si:["hypotheque","caution"],
+  objets_ok:["tresorerie","donation","succession","dette_fiscale","dette_privee","vehicule","scpi","cca_apport","cca_remb","investissement_pro","travaux_moins75"],
+  objets_ko:["acq_immo","soulte","travaux_plus75","terrain","rachat_conso","vefa","loa","reconstitution_epargne"],
+  types_bien_ok:["habitation","mixte_hab_sup","mixte_pro_sup"],
+  types_bien_ko:["drom","chateau","pro_autre","garage_seul"],
+  types_bien_vigi:["pro_bureau"],
+  endettement_actuel_limite:false,
+  rejets_ok:true,procedure_ok:false,
+  assurance:"Facultative",bilan_retraite_age:59,valeur_min_bien:300000,
+  frais_dossier:"0,75%",honoraires:"6% TTC max (mobilier/pro)",expertise:"485€ si finalisé",releves_perso:"NÉANT si AI reflète les revenus. Si AI à zéro ou revenus récents non déclarés → 3 mois tous comptes en pratique (non écrit mais systématique en analyse).",releves_pro:"3 derniers mois si gérant / indépendant",anciennete_salarie:"Non précisée dans les documents. En pratique : CDI récent (< 3 mois) + AI à zéro → les relevés de compte deviennent la seule preuve de revenu exploitable.",
+  notes:"Bank B exige une garantie hypothécaire en 1er rang sur un bien sans crédit hypothécaire NI caution organisme existant. Un prêt avec caution organisme existant (même sans inscription) bloque le montage. DPE obligatoire si bien acquis avant 2007. Bilan retraite obligatoire dès 59 ans (revenus retenus à 64 ans). Apport CCA but non-immo : 10 ans max, 30% du bilan max. | PIÈCES BANCAIRES : Relevés de compte personnel = NÉANT (Bank B ne les demande pas sauf revenus fonciers récents). Relevés compte pro = 3 mois si gérant/indépendant. | ANCIENNETÉ SALARIÉ : Non précisée dans les documents partenaires — aucune restriction documentée."
+},
+{
+  id:"bankb_immo",nom:"Bank B",produit:"But Immobilier",
+  type_produit:"immo",
+  professions_ok:["salarie","retraite","fonctionnaire","liberal","artisan","gerant","gerant_sci","rentier"],
+  professions_ko:["courtier"],
+  montant_min:100000,montant_max:null,
+  durees_amort:[10,12,15,20,25],
+  durees_infine_immo:[10,12,15],
+  age_fin:95,endettement_max:45,
+  rav:{multi_seul:1500,multi_couple:2000,mono_seul:2000,mono_couple:2500,enfant:200},
+  rh_type:"zones",
+  bien_libre_requis:false,
+  second_rang:false,
+  garantie_ko_si:["hypotheque","caution"],
+  objets_ok:["acq_immo","soulte","travaux_moins75","travaux_plus75","terrain"],
+  objets_ko:["tresorerie","donation","succession","dette_fiscale","dette_privee","vehicule","scpi","cca_apport","cca_remb","investissement_pro","rachat_conso","vefa","loa","reconstitution_epargne"],
+  types_bien_ok:["habitation","mixte_hab_sup","mixte_pro_sup"],
+  types_bien_ko:["drom","chateau","pro_autre","garage_seul"],
+  types_bien_vigi:["pro_bureau"],
+  endettement_actuel_limite:false,
+  rejets_ok:true,procedure_ok:false,
+  assurance:"Facultative",bilan_retraite_age:59,valeur_min_bien:300000,
+  frais_dossier:"0,75%",honoraires:"1,2% TTC max (immo)",expertise:"485€ si finalisé",releves_perso:"NÉANT si AI reflète les revenus. Si AI à zéro ou revenus récents non déclarés → 3 mois tous comptes en pratique (non écrit mais systématique en analyse).",releves_pro:"3 derniers mois si gérant / indépendant",anciennete_salarie:"Non précisée dans les documents. En pratique : CDI récent (< 3 mois) + AI à zéro → les relevés de compte deviennent la seule preuve de revenu exploitable.",
+  notes:"Exclusion VEFA et construction neuve. Travaux 75k-300k€ : garantie déplacée obligatoire. Acquisition UE avec garantie déplacée possible. Exclusion Israël. 2nd rang : NON. DPE obligatoire si bien acquis avant 2007. | PIÈCES BANCAIRES : Relevés de compte personnel = NÉANT (Bank B ne les demande pas sauf revenus fonciers récents). Relevés compte pro = 3 mois si gérant/indépendant. | ANCIENNETÉ SALARIÉ : Non précisée dans les documents partenaires."
+},
+{
+  id:"cfcal",nom:"CFCAL",produit:"Hypo Tréso — 22k€ à 750k€",
+  type_produit:"conso",
+  professions_ok:["salarie","retraite","fonctionnaire","liberal","rentier","gerant_sci"],
+  professions_ko:["artisan","gerant","courtier"],
+  montant_min:22000,montant_max:750000,
+  durees_amort:[10,12,15,20,25],
+  durees_infine_immo:null,
+  age_fin:95,endettement_max:40,
+  endettement_actuel_limite:true,
+  rav:{seul_inf35:780,couple_inf35:1000,seul_35_38:930,couple_35_38:1200,seul_38_40:1130,couple_38_40:1400,enfant:250},
+  rh_type:"uniforme",rh_uniforme:70,
+  bien_libre_requis:false,
+  second_rang:true,
+  second_rang_detail:"2nd rang derrière garantie hypothécaire existante (RH 70% sur ensemble). 1er rang si caution organisme existante.",
+  garantie_ok_si:["aucune","caution","hypotheque"],
+  objets_ok:["tresorerie","donation","succession","dette_fiscale","dette_privee","vehicule","scpi","travaux_moins75"],
+  objets_ko:["acq_immo","soulte","travaux_plus75","terrain","rachat_conso","vefa","loa","reconstitution_epargne","cca_apport","cca_remb","investissement_pro"],
+  types_bien_ok:["habitation","mixte_hab_sup","pro_bureau"],
+  types_bien_ko:["drom","chateau","pro_autre","garage_seul","mixte_pro_sup"],
+  endettement_actuel_limite:true,
+  rejets_ok:false,procedure_ok:false,
+  assurance:"Obligatoire (groupe MALJ ou CHUBB si rachat)",bilan_retraite_age:57,valeur_min_bien:null,
+  frais_dossier:"2,10% non plafonnés",honoraires:"Non précisé partenaires",expertise:"Photos + DPE si acquis après 2007",releves_perso:"3 derniers mois — TOUS les comptes bancaires",releves_pro:"3 derniers mois comptes pro si profession libérale",anciennete_salarie:"Non précisée dans les documents — la garantie réelle (bien immo) prime sur la stabilité emploi",
+  notes:"0 rejet/impayé toléré. Endettement actuel < 40% requis. Rachat de prêts/dettes ≤ 50% du montant. Trésorerie ≥ 75k€ : attestation sur l'honneur. Différé possible 24 mois. Divorce en cours = exclusion (sauf consentement mutuel notaire). Exclusion HCR, marchands de biens, promotion immo. | PIÈCES BANCAIRES : Relevés de compte personnel = 3 derniers mois tous comptes (CFCAL/MMB). Relevés compte pro = 3 mois si profession libérale. Salarié : 3 derniers BS + BS décembre N-1. | ANCIENNETÉ SALARIÉ : Non précisée dans les documents partenaires — aucune restriction documentée. La garantie étant réelle (bien immo), la stabilité emploi est moins déterminante qu'en prêt classique."
+},
+{
+  id:"mmb",nom:"MyMoneyBank",produit:"My New Tréso — 50k€ à 500k€",
+  type_produit:"conso",
+  professions_ok:["salarie","retraite","fonctionnaire","liberal","rentier"],
+  professions_ko:["artisan","gerant","gerant_sci","courtier"],
+  montant_min:50000,montant_max:500000,
+  durees_amort:[10,15,20,25],
+  durees_infine_immo:null,
+  age_fin:85,endettement_max:35,
+  rav:{seul:1250,couple:1500,enfant:300},
+  rh_type:"uniforme",rh_uniforme:70,
+  bien_libre_requis:false,
+  second_rang:false,
+  garantie_ok_si:["aucune","caution"],
+  garantie_ko_si_hypo:true,
+  objets_ok:["tresorerie","donation","succession","dette_fiscale","dette_privee","vehicule","travaux_moins75"],
+  objets_ko:["acq_immo","soulte","travaux_plus75","terrain","rachat_conso","vefa","loa","reconstitution_epargne","cca_apport","cca_remb","investissement_pro","scpi"],
+  types_bien_ok:["habitation","mixte_hab_sup"],
+  types_bien_ko:["drom","chateau","pro_autre","garage_seul","mixte_pro_sup","pro_bureau"],
+  endettement_actuel_limite:true,
+  rejets_ok:false,procedure_ok:false,
+  assurance:"Facultative (fortement recommandée)",bilan_retraite_age:57,valeur_min_bien:null,
+  frais_dossier:"Selon grille",honoraires:"Non précisé",expertise:"Systématique si > 300k€",releves_perso:"3 derniers mois — TOUS les comptes bancaires",releves_pro:"3 derniers mois comptes pro si profession libérale",anciennete_salarie:"Non précisée dans les documents — aucune restriction documentée",
+  notes:"1er rang uniquement. Garantie hypothécaire existante = blocage (1er rang uniquement). Gérant de société : revenus non pris en compte. 0 rejet toléré. France métro + Réunion. Bien achevé et habitable requis. | PIÈCES BANCAIRES : Relevés de compte personnel = 3 derniers mois tous comptes. Salarié : 3 derniers BS + BS décembre N-1. | ANCIENNETÉ SALARIÉ : Non précisée dans les documents partenaires."
+},
+{
+  id:"cmt_immo",nom:"CMT — Griffon Patrimoine IMMO",produit:"In fine 60/72/84 mois",
+  type_produit:"infine_court",
+  professions_ok:["salarie","retraite","fonctionnaire","liberal","artisan","gerant","gerant_sci","rentier"],
+  professions_ko:["courtier"],
+  montant_min:100000,montant_max:500000,
+  durees_infine:[60,72,84],
+  age_fin:85,age_signature_max:80,endettement_max:35,
+  rav:{seul:1100,couple:1500},
+  rh_type:"uniforme",rh_uniforme:60,
+  bien_libre_requis:true,
+  second_rang:false,
+  garantie_ok_si:["aucune"],
+  garantie_ko_si:["hypotheque","caution"],
+  objets_ok:["acq_immo","tresorerie","travaux_moins75","donation","succession","vehicule"],
+  objets_ko:["travaux_plus75","soulte","cca_apport","cca_remb","investissement_pro","rachat_conso","vefa","loa","reconstitution_epargne","dette_fiscale","scpi"],
+  types_bien_ok:["habitation"],
+  types_bien_ko:["drom","chateau","pro_autre","garage_seul","mixte_hab_sup","mixte_pro_sup","pro_bureau"],
+  endettement_actuel_limite:false,
+  rejets_ok:true,procedure_ok:false,
+  assurance:"Facultative",bilan_retraite_age:null,valeur_min_bien:null,
+  frais_dossier:"1,5%",honoraires:"0,65% des frais de dossier",expertise:"420€",releves_perso:"Non précisé dans les documents CMT",releves_pro:"Non précisé dans les documents CMT",anciennete_salarie:"Non précisée dans les documents CMT",
+  notes:"In fine UNIQUEMENT (60, 72 ou 84 mois). Bien OBLIGATOIREMENT libre de toute garantie (CRD = 0, aucune garantie hypothécaire ni caution organisme). Âge max à la signature : dans la 80e année. Pénalité remboursement anticipé : 1%. Paiement mensuel des intérêts uniquement. | PIÈCES BANCAIRES : Non précisées dans les documents CMT disponibles — se référer à l'espace partenaires CMT. | ANCIENNETÉ SALARIÉ : Non précisée dans les documents partenaires."
+},
+{
+  id:"cmt_hypo",nom:"CMT — Griffon Hypo",produit:"Amortissable conso — 50k€ à 150k€",
+  type_produit:"conso",
+  professions_ok:["salarie","retraite","fonctionnaire","liberal","artisan","gerant","gerant_sci","rentier"],
+  professions_ko:["courtier"],
+  montant_min:50000,montant_max:150000,
+  durees_amort_mois_min:12,durees_amort_mois_max:120,
+  age_fin:85,endettement_max:35,
+  rav:{seul:1100,couple:1500},
+  rh_type:"uniforme",rh_uniforme:70,
+  bien_libre_requis:false,
+  second_rang:true,
+  garantie_ok_si:["aucune","caution","hypotheque"],
+  objets_ok:["tresorerie","donation","succession","dette_fiscale","dette_privee","vehicule","travaux_moins75","soulte"],
+  objets_ko:["acq_immo","travaux_plus75","terrain","cca_apport","cca_remb","investissement_pro","rachat_conso","vefa","loa","reconstitution_epargne"],
+  types_bien_ok:["habitation","mixte_hab_sup"],
+  types_bien_ko:["drom","chateau","pro_autre","garage_seul","mixte_pro_sup","pro_bureau"],
+  endettement_actuel_limite:false,
+  rejets_ok:true,procedure_ok:false,
+  assurance:"Obligatoire (groupe ou délégation)",bilan_retraite_age:null,valeur_min_bien:null,
+  frais_dossier:"1%",honoraires:"3% max partenaire",expertise:"420€",releves_perso:"Non précisé dans les documents CMT",releves_pro:"Non précisé dans les documents CMT",anciennete_salarie:"Non précisée dans les documents CMT",
+  notes:"Amortissable uniquement — taux usure crédits conso > 6000€. Rachat dettes ≤ 50% du montant. 2nd rang possible. Montant max 150 000€. Durée 12 à 120 mois. | PIÈCES BANCAIRES : Non précisées dans les documents CMT disponibles — se référer à l'espace partenaires CMT. | ANCIENNETÉ SALARIÉ : Non précisée dans les documents partenaires."
+}
+];
+
+// ============================================================
+// RH BANK B
+// ============================================================
+function getRH_BB(dep){
+  if(!dep) return{rh:30,label:"Reste de France"};
+  const d=dep.trim(), num=d.replace(/\D/g,'').substring(0,2), cp=d.replace(/\D/g,'').substring(0,5);
+  if(num==="06") return{rh:60,label:"Alpes-Maritimes (06)"};
+  const p60=["75001","75002","75003","75004","75005","75006","75007","75008","75009","75010","75016"];
+  if(p60.some(x=>cp.startsWith(x))) return{rh:60,label:"Paris 1er-10e+16e"};
+  const d50=["77","78","91","92","93","94","95","60","14","27","17","33","40","64","59","73","74","84","13","04","83"];
+  if(d50.includes(num)) return{rh:50,label:"Dépt "+num};
+  for(let i=69000;i<=69009;i++) if(cp.startsWith(String(i))) return{rh:50,label:"Lyon"};
+  if(["31000","31090","31100","31200","31300","31400","31500"].some(x=>cp.startsWith(x))) return{rh:50,label:"Toulouse"};
+  if(["44000","44100","44200","44300","44380","44500","44510"].some(x=>cp.startsWith(x))) return{rh:50,label:"Nantes/Baule"};
+  if(num==="75") return{rh:50,label:"Paris autres arr."};
+  if(num==="62") return{rh:40,label:"Pas-de-Calais"};
+  if(num==="67"||num==="68") return{rh:null,label:"Alsace ("+num+") — garantie complémentaire UNIQUEMENT"};
+  if(["971","972","973","974","976"].some(x=>d.startsWith(x))) return{rh:null,label:"DROM-COM — EXCLU"};
+  return{rh:30,label:"Reste de France"};
+}
+
+function getMontantMax(b,valeur,crd,dep){
+  if(!valeur) return null;
+  let rh;
+  if(b.rh_type==="zones"){
+    const z=getRH_BB(dep);
+    if(z.rh===null) return{val:null,rh:null,label:z.label};
+    rh=z.rh;
+    const tb=document.getElementById("type_bien").value;
+    if(tb==="mixte_hab_sup"||tb==="mixte_pro_sup") rh=30;
+    return{val:Math.max(0,valeur*rh/100-(crd||0)),rh,label:z.label};
+  }
+  rh=b.rh_uniforme;
+  return{val:Math.max(0,valeur*rh/100-(crd||0)),rh,label:"France entière"};
+}
+
+// ============================================================
+// CALCUL MENSUALITÉ AMORTISSABLE
+// ============================================================
+function mensualiteAmort(capital, taux_annuel, duree_ans){
+  const tm = taux_annuel/100/12;
+  const n = duree_ans*12;
+  if(tm===0) return capital/n;
+  return capital * tm * Math.pow(1+tm,n) / (Math.pow(1+tm,n)-1);
+}
+
+// ============================================================
+// SIMULATION
+// ============================================================
+function simulations(b, montant, dossier){
+  const canAmort = b.durees_amort && b.durees_amort.length>0;
+  const canInfine = (b.durees_infine_immo||b.durees_infine_mobilier||b.durees_infine_pro||b.durees_infine);
+
+  // In fine : vérifier way-out
+  const isMonoProp = dossier.multi==="non";
+  const hasPatriFi = dossier.patri_fi==="oui";
+  const hasVentePrevue = (dossier.garantie_type==="aucune"||dossier.garantie_type==="caution") && (b.bien_libre_requis||true);
+  const inFineOk = !isMonoProp || hasPatriFi || (b.id==="cmt_immo");
+  // CMT IMMO : in fine court terme, le bien lui-même sert de way-out via vente — acceptable si bien en vente
+
+  let amortRows=[], infineRows=[], infineWarn="";
+
+  if(canAmort && montant>0){
+    const durees = [15,20,25].filter(d=>b.durees_amort.includes(d));
+    durees.forEach(d=>{
+      const taux = TAUX.amort[d]||5.30;
+      const ageFin = (dossier.age||0)+d;
+      if(dossier.age && ageFin>b.age_fin) return;
+      const m = mensualiteAmort(montant,taux,d);
+      amortRows.push({duree:d,taux,mensualite:m,cout_total:m*d*12-montant});
+    });
+  }
+
+  if(canInfine && montant>0){
+    if(!inFineOk){
+      infineWarn="⚠️ In fine non disponible : emprunteur monopropriétaire sans patrimoine financier identifié. Le bien mis en garantie ne peut pas servir simultanément de way-out (moyen de remboursement). Solution possible : justifier un way-out distinct (assurance-vie, PER, capacité d'épargne, parts SCPI).";
+    } else {
+      // CMT IMMO : durées en mois
+      if(b.id==="cmt_immo"){
+        b.durees_infine.forEach(dm=>{
+          const da=dm/12;
+          const taux=TAUX.infine[10]||5.50; // taux usure < 10 ans
+          const intMensuel=montant*(taux/100/12);
+          const ageFin=(dossier.age||0)+Math.ceil(da);
+          if(dossier.age && ageFin>b.age_fin) return;
+          infineRows.push({duree:dm+"m",taux,interet_mensuel:intMensuel,cout_total:intMensuel*dm});
+        });
+      } else {
+        const toutes = [...(b.durees_infine_immo||[]),...(b.durees_infine_mobilier||[])];
+        const uniques = [...new Set(toutes)].filter(d=>[10,15,20].includes(d));
+        uniques.forEach(d=>{
+          const taux=TAUX.infine[d]||5.60;
+          const ageFin=(dossier.age||0)+d;
+          if(dossier.age && ageFin>b.age_fin) return;
+          const intMensuel=montant*(taux/100/12);
+          infineRows.push({duree:d+"a",taux,interet_mensuel:intMensuel,cout_total:intMensuel*d*12});
+        });
+      }
+    }
+  }
+
+  return{amortRows,infineRows,infineWarn};
+}
+
+// ============================================================
+// ANALYSE BANQUE
+// ============================================================
+function evaluer(b,d){
+  const ex=[],vi=[],ok_pts=[];
+
+  if(b.professions_ko.includes(d.profession)){
+    ex.push("Profession exclue : "+lpro(d.profession));
+  } else if(b.professions_ok.includes(d.profession)){
+    ok_pts.push("Profil professionnel accepté ("+lpro(d.profession)+")");
+  }
+  if(b.id==="mmb"&&d.profession==="gerant") ex.push("Gérant : statut ok mais revenus non retenus — dossier non viable");
+
+  if(d.fiscal==="etranger") ex.push("Résidence fiscale hors France : exclusion");
+  if(d.fiscal==="drom"){
+    if(b.id==="cfcal") ok_pts.push("DROM-COM accepté (bien en garantie en France métro requis)");
+    else if(b.id==="mmb") ok_pts.push("Réunion acceptée");
+    else ex.push("DROM-COM : lieu de résidence exclu");
+  }
+
+  if(d.rejets==="oui"&&!b.rejets_ok) ex.push("Rejets / impayés en cours : exclusion (0 toléré)");
+  if(d.procedure==="oui"&&!b.procedure_ok) ex.push("Procédure collective en cours : exclusion");
+
+  if(b.objets_ko.includes(d.objet)) ex.push("Objet non finançable : "+lobj(d.objet));
+  else if(b.objets_ok.includes(d.objet)) ok_pts.push("Objet accepté : "+lobj(d.objet));
+
+  if(d.montant<b.montant_min) ex.push("Montant "+fmt(d.montant)+"€ < minimum ("+fmt(b.montant_min)+"€)");
+  if(b.montant_max&&d.montant>b.montant_max) ex.push("Montant "+fmt(d.montant)+"€ > maximum ("+fmt(b.montant_max)+"€)");
+
+  if(b.types_bien_ko.includes(d.type_bien)) ex.push("Type de bien exclu : "+ltb(d.type_bien));
+  else if(b.types_bien_ok&&b.types_bien_ok.includes(d.type_bien)) ok_pts.push("Type de bien accepté en garantie");
+  if(b.types_bien_vigi&&b.types_bien_vigi.includes(d.type_bien)) vi.push("Bien professionnel : demande préalable avec photos et titre de propriété");
+
+  if(b.valeur_min_bien&&d.valeur_mini==="non") vi.push("Valeur < 300 000€ : demande préalable obligatoire (photos, titre, tableau patrimonial)");
+
+  if(d.propriete==="moins50") ex.push("Indivision < 50% : non accepté");
+  if(d.propriete==="nue"&&b.id!=="mmb") ex.push("Nue-propriété non acceptée");
+
+  // Garantie
+  if(b.bien_libre_requis){
+    if(d.crd>0||d.garantie_type==="hypotheque"||d.garantie_type==="caution"){
+      ex.push("Bien doit être LIBRE de toute garantie — CRD ou garantie existante détectée");
+    } else if(d.garantie_type==="inconnu") vi.push("Bien libre de toute garantie requis — vérifier l'absence de CRD et d'inscription");
+    else ok_pts.push("Bien libre de toute garantie ✓");
+  } else if(b.garantie_ko_si&&b.garantie_ko_si.includes(d.garantie_type)){
+    if(d.garantie_type==="hypotheque") ex.push("Garantie hypothécaire existante : Bank B exige 1er rang sur bien sans garantie hypothécaire ni caution organisme préexistante");
+    if(d.garantie_type==="caution") ex.push("Caution organisme existante (Crédit Logement…) : Bank B exige un bien sans aucun crédit garanti existant — même sans inscription hypothécaire");
+    if(d.garantie_type==="inconnu") vi.push("⚠️ Nature de la garantie non vérifiée — PRIORITÉ : vérifier l'offre de prêt initiale (garantie hypothécaire ou caution organisme ?)");
+  } else if(b.garantie_ko_si_hypo&&d.garantie_type==="hypotheque"){
+    ex.push("Garantie hypothécaire existante : 1er rang uniquement — non compatible");
+  } else {
+    if(d.garantie_type==="hypotheque"&&b.second_rang) vi.push("Garantie hypothécaire existante : 2nd rang possible — "+b.second_rang_detail);
+    if(d.garantie_type==="caution") ok_pts.push("Caution organisme existante : pas d'inscription → 1er rang disponible ✓");
+    if(d.garantie_type==="aucune") ok_pts.push("Aucune garantie existante → 1er rang disponible ✓");
+    if(d.garantie_type==="inconnu") vi.push("Nature de la garantie existante non vérifiée — à confirmer");
+  }
+
+  if(d.avant2007==="oui"&&(b.id==="bankb_conso"||b.id==="bankb_immo")) vi.push("Bien acquis avant 2007 : DPE obligatoire (quelle que soit la lettre)");
+
+  if(d.endettement_actuel==="sup40"&&b.endettement_actuel_limite) ex.push("Endettement actuel > 40% : exclusion");
+  else if(d.endettement_actuel==="inf40"&&b.endettement_actuel_limite) vi.push("Endettement actuel entre 35 et 40% : en limite — soigner le RAV");
+
+  if(d.age&&d.duree){
+    const finAge=d.age+d.duree;
+    if(b.age_signature_max&&d.age>=b.age_signature_max) ex.push("Âge signature trop élevé : "+d.age+" ans (max "+b.age_signature_max+" ans)");
+    else if(finAge>b.age_fin) ex.push("Âge fin de prêt : "+finAge+" ans > max "+b.age_fin+" ans — durée max : "+(b.age_fin-d.age)+" ans");
+    else ok_pts.push("Âge fin de prêt OK : "+finAge+" ans / max "+b.age_fin);
+  }
+
+  if(b.bilan_retraite_age&&d.age>=b.bilan_retraite_age) vi.push("Bilan retraite obligatoire dès "+b.bilan_retraite_age+" ans (revenus retenus à 64 ans chez Bank B)");
+
+  // Relevés bancaires selon situation AI
+  if((b.id==="bankb_conso"||b.id==="bankb_immo")&&(d.ai_ok==="zero"||d.ai_ok==="partiel")){
+    vi.push("⚠️ Pièces bancaires renforcées : AI à zéro ou ne reflétant pas les revenus actuels → Bank B demandera en pratique 3 mois de relevés de tous les comptes pour justifier les rentrées réelles (non écrit dans la checklist standard mais systématique en analyse)");
+  }
+  if((b.id==="cfcal"||b.id==="mmb")&&(d.ai_ok==="zero"||d.ai_ok==="partiel")){
+    vi.push("⚠️ AI à zéro ou partiel : 3 mois de relevés tous comptes requis + vigilance sur la capacité à justifier les revenus actuels");
+  }
+
+  // RH
+  const mmax=getMontantMax(b,d.valeur,d.crd,d.dep);
+  let rhInfo=null;
+  if(mmax){
+    if(mmax.rh===null){
+      ex.push("Département "+d.dep+" : "+mmax.label);
+    } else if(d.montant&&d.valeur){
+      rhInfo=mmax;
+      if(d.montant>mmax.val){
+        ex.push("Montant "+fmt(d.montant)+"€ dépasse le finançable (RH "+mmax.rh+"% → max "+fmt(Math.round(mmax.val))+"€)");
+      } else {
+        const ratio=((d.montant+(d.crd||0))/d.valeur*100).toFixed(1);
+        ok_pts.push("RH utilisé : "+ratio+"% / max "+mmax.rh+"% — marge "+fmt(Math.round(mmax.val-d.montant))+"€");
+      }
+    }
+  }
+
+  const statut=ex.length>0?"ko":vi.length>0?"warn":"ok";
+  return{b,statut,ex,vi,ok_pts,rhInfo};
+}
+
+// ============================================================
+// AFFICHAGE
+// ============================================================
+let lastDossier=null, lastResultats=null;
+
+function analyser(){
+  const d={
+    profession:v("profession"),situation:v("situation"),age:int("age"),duree:int("duree"),
+    fiscal:v("fiscal"),rejets:v("rejets"),procedure:v("procedure"),multi:v("multi"),ai_ok:v("ai_ok"),
+    patri_fi:v("patri_fi"),enfants:int("enfants"),endettement_actuel:v("endettement_actuel"),
+    nom_client:v("nom_client"),objet:v("objet"),montant:int("montant"),
+    dep:v("dep"),valeur:int("valeur"),crd:int("crd"),garantie_type:v("garantie_type"),
+    type_bien:v("type_bien"),propriete:v("propriete"),valeur_mini:v("valeur_mini"),
+    rang:v("rang"),avant2007:v("avant2007")
+  };
+  if(!d.profession||!d.objet||!d.montant||!d.valeur){
+    alert("Merci de renseigner : statut professionnel, objet, montant et valeur du bien.");return;
+  }
+  lastDossier=d; lastResultats=BANQUES.map(b=>evaluer(b,d));
+  afficher(lastResultats,d);
+}
+
+function afficher(resultats,dossier){
+  const cards=document.getElementById("cards");
+  const rsumm=document.getElementById("rsumm");
+  cards.innerHTML="";
+  const nb_ok=resultats.filter(r=>r.statut==="ok").length;
+  const nb_w=resultats.filter(r=>r.statut==="warn").length;
+  const nb_ko=resultats.filter(r=>r.statut==="ko").length;
+  rsumm.textContent=nb_ok+" éligible(s) · "+nb_w+" vigilance(s) · "+nb_ko+" exclu(s)";
+  document.getElementById("btn-save").style.display="inline-block";
+
+  const ordre={ok:0,warn:1,ko:2};
+  resultats.sort((a,b)=>ordre[a.statut]-ordre[b.statut]);
+
+  resultats.forEach(r=>{
+    const{b,statut,ex,vi,ok_pts,rhInfo}=r;
+    const sc=statut==="ok"?"ok":statut==="warn"?"warn":"ko";
+    const sl=statut==="ok"?"✓ Éligible":statut==="warn"?"⚠ Vigilances":"✗ Exclu";
+
+    let mboxHtml="";
+    if(rhInfo&&rhInfo.val!==null&&rhInfo.rh!==null){
+      mboxHtml=`<div class="mbox"><div><div class="mval">${fmt(Math.round(rhInfo.val))} €</div><div class="mlabel">Finançable max — RH ${rhInfo.rh}% (${rhInfo.label})</div></div><div class="mrh">RH ${rhInfo.rh}%</div></div>`;
+    }
+
+    let bodyHtml="";
+    if(statut!=="ko"){
+      if(ok_pts.length) bodyHtml+=`<div class="subsec">Points forts</div><ul class="ilist">${ok_pts.slice(0,5).map(x=>`<li><span class="ic" style="color:var(--ok)">✓</span><span>${x}</span></li>`).join("")}</ul>`;
+      if(vi.length) bodyHtml+=`<div class="subsec">Points de vigilance</div><ul class="ilist">${vi.map(x=>`<li><span class="ic" style="color:var(--warn)">⚠</span><span>${x}</span></li>`).join("")}</ul>`;
+    } else {
+      if(ex.length) bodyHtml+=`<div class="subsec">Motifs d'exclusion</div><ul class="ilist">${ex.map(x=>`<li><span class="ic" style="color:var(--ko)">✗</span><span>${x}</span></li>`).join("")}</ul>`;
+      if(vi.length) bodyHtml+=`<div class="subsec">Remarques</div><ul class="ilist">${vi.map(x=>`<li><span class="ic" style="color:var(--warn)">⚠</span><span>${x}</span></li>`).join("")}</ul>`;
+    }
+
+    // SIMULATION
+    let simHtml="";
+    if(statut!=="ko"&&dossier.montant>0){
+      const{amortRows,infineRows,infineWarn}=simulations(b,dossier.montant,dossier);
+      if(amortRows.length){
+        simHtml+=`<div class="sim-section"><div class="sim-title">📊 Simulation amortissable</div>
+        <table class="sim-table"><thead><tr><th>Durée</th><th>Taux indicatif</th><th>Mensualité</th><th>Coût total intérêts</th></tr></thead><tbody>`;
+        amortRows.forEach(row=>{
+          simHtml+=`<tr><td><strong>${row.duree} ans</strong></td><td class="taux-cell">${row.taux.toFixed(2)}%</td><td><strong>${fmt(Math.round(row.mensualite))} €/mois</strong></td><td>${fmt(Math.round(row.cout_total))} €</td></tr>`;
+        });
+        simHtml+=`</tbody></table><div class="sim-note">Taux indicatifs PTH — hors assurance emprunteur. Mensualité capital+intérêts.</div></div>`;
+      }
+      if(infineWarn){
+        simHtml+=`<div class="infine-warn">🔒 In fine — ${infineWarn}</div>`;
+      } else if(infineRows.length){
+        const unit=b.id==="cmt_immo"?"mois":"ans";
+        simHtml+=`<div class="sim-section"><div class="sim-title">📊 Simulation in fine</div>
+        <table class="sim-table"><thead><tr><th>Durée</th><th>Taux indicatif</th><th>Intérêts mensuels</th><th>Coût total intérêts</th></tr></thead><tbody>`;
+        infineRows.forEach(row=>{
+          simHtml+=`<tr><td><strong>${row.duree}</strong></td><td class="taux-cell">${row.taux.toFixed(2)}%</td><td><strong>${fmt(Math.round(row.interet_mensuel))} €/mois</strong></td><td>${fmt(Math.round(row.cout_total))} €</td></tr>`;
+        });
+        simHtml+=`</tbody></table><div class="sim-note">In fine : mensualités = intérêts seuls. Capital remboursé en totalité à l'échéance.</div></div>`;
+      }
+    }
+
+    // Durées texte
+    let dureeTxt="";
+    if(b.durees_amort) dureeTxt+="Amort. : "+b.durees_amort.join(", ")+" ans";
+    if(b.durees_amort_mois_min) dureeTxt+="Amort. : 12 à 120 mois";
+    if(b.durees_infine) dureeTxt+=(dureeTxt?"; ":"")+"In fine : "+b.durees_infine.join(", ")+" mois";
+    if(b.durees_infine_immo) dureeTxt+=(dureeTxt?"; ":"")+"In fine immo : "+b.durees_infine_immo.join(", ")+" ans";
+    if(b.durees_infine_mobilier) dureeTxt+=(dureeTxt?"; ":"")+"In fine mobilier : "+b.durees_infine_mobilier.join(", ")+" ans";
+    if(b.durees_infine_pro) dureeTxt+=(dureeTxt?"; ":"")+"In fine pro : "+b.durees_infine_pro.join(", ")+" ans";
+
+    const card=document.createElement("div");
+    card.className="bcard "+(statut==="ok"?"eligible":statut==="warn"?"warning":"excluded");
+    card.innerHTML=`
+      <div class="bhead">
+        <div><div class="bname">${b.nom} — ${b.produit}</div><div class="btype">${b.type_produit==="immo"?"But immobilier":b.type_produit==="infine_court"?"In fine court terme":"Tréso / Mobilier / Pro"}</div></div>
+        <span class="badge ${sc}">${sl}</span>
+      </div>
+      <div class="bbody">
+        ${mboxHtml}${bodyHtml}${simHtml}
+        <button class="dtoggle" onclick="tgl(this)">▸ Conditions complètes</button>
+        <div class="dpanel">
+          <div class="dgrid">
+            <div><div class="dk">Montant min/max</div><div class="dv">${fmt(b.montant_min)}€ / ${b.montant_max?fmt(b.montant_max)+"€":"Sans max"}</div></div>
+            <div><div class="dk">Âge fin de prêt</div><div class="dv">${b.age_fin} ans${b.age_signature_max?" (signature max "+b.age_signature_max+" ans)":""}</div></div>
+            <div><div class="dk">Durées</div><div class="dv">${dureeTxt||"—"}</div></div>
+            <div><div class="dk">Endettement max</div><div class="dv">${b.endettement_max}%${b.endettement_actuel_limite?" · Actuel < 40% requis":""}</div></div>
+            <div><div class="dk">Assurance</div><div class="dv">${b.assurance}</div></div>
+            <div><div class="dk">2nd rang</div><div class="dv">${b.second_rang?"Oui":"Non"}</div></div>
+            <div><div class="dk">Bien libre requis</div><div class="dv">${b.bien_libre_requis?"OUI — obligatoire":"Non"}</div></div>
+            <div><div class="dk">RH</div><div class="dv">${b.rh_type==="uniforme"?b.rh_uniforme+"% France entière":"Zones (Bank B)"}</div></div>
+            <div><div class="dk">Frais de dossier</div><div class="dv">${b.frais_dossier||"—"}</div></div>
+            <div><div class="dk">Honoraires courtier</div><div class="dv">${b.honoraires||"—"}</div></div>
+            <div><div class="dk">Expertise</div><div class="dv">${b.expertise||"—"}</div></div>
+            <div><div class="dk">Bilan retraite</div><div class="dv">${b.bilan_retraite_age?"Obligatoire dès "+b.bilan_retraite_age+" ans":"Non précisé"}</div></div>
+            <div><div class="dk">Relevés compte perso</div><div class="dv">${b.releves_perso||"Non précisé"}</div></div>
+            <div><div class="dk">Relevés compte pro</div><div class="dv">${b.releves_pro||"Non précisé"}</div></div>
+            <div><div class="dk">Ancienneté salarié</div><div class="dv">${b.anciennete_salarie||"Non précisée dans les docs"}</div></div>
+          </div>
+          ${b.notes?`<div class="dnote">${b.notes}</div>`:""}
+        </div>
+      </div>`;
+    cards.appendChild(card);
+  });
+
+  document.getElementById("results").style.display="block";
+  document.getElementById("results").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+// ============================================================
+// ENREGISTREMENT (localStorage persistant)
+// ============================================================
+function getSaved(){
+  try{ return JSON.parse(localStorage.getItem("pth_simulations")||"[]"); }
+  catch(e){ return []; }
+}
+function setSaved(arr){ localStorage.setItem("pth_simulations",JSON.stringify(arr)); }
+
+function saveSimulation(){
+  if(!lastDossier||!lastResultats){alert("Lance d'abord une analyse.");return;}
+  const nom=lastDossier.nom_client||("Simulation du "+new Date().toLocaleDateString("fr-FR"));
+  const item={
+    id:Date.now(),
+    nom,
+    date:new Date().toLocaleDateString("fr-FR"),
+    dossier:lastDossier,
+    resultats:lastResultats.map(r=>({
+      banque_id:r.b.id,banque_nom:r.b.nom+" — "+r.b.produit,
+      statut:r.statut,
+      ex:r.ex,vi:r.vi,ok_pts:r.ok_pts,
+      rhInfo:r.rhInfo
+    }))
+  };
+  const arr=getSaved();
+  arr.unshift(item);
+  setSaved(arr);
+  updateSavedBadge();
+  alert("✓ Simulation enregistrée pour "+nom);
+}
+
+function deleteSaved(id){
+  if(!confirm("Supprimer cette simulation ?")) return;
+  const arr=getSaved().filter(x=>x.id!==id);
+  setSaved(arr);
+  renderSaved();
+  updateSavedBadge();
+}
+
+function restoreSimulation(id){
+  const arr=getSaved();
+  const item=arr.find(x=>x.id===id);
+  if(!item) return;
+  const d=item.dossier;
+  const fields=["profession","situation","age","duree","fiscal","rejets","procedure","multi","patri_fi","enfants","endettement_actuel","nom_client","objet","montant","dep","valeur","crd","garantie_type","type_bien","propriete","valeur_mini","rang","avant2007"];
+  fields.forEach(f=>{
+    const el=document.getElementById(f);
+    if(el) el.value=d[f]||"";
+  });
+  showTab("t-form");
+  analyser();
+}
+
+function renderSaved(){
+  const el=document.getElementById("saved-list");
+  const arr=getSaved();
+  if(!arr.length){el.innerHTML='<div class="saved-empty">Aucune simulation enregistrée pour l\'instant.</div>';return;}
+  el.innerHTML=arr.map(item=>{
+    const tags=item.resultats.map(r=>`<span class="saved-tag ${r.statut}">${r.banque_nom.split("—")[0].trim()} ${r.statut==="ok"?"✓":r.statut==="warn"?"⚠":"✗"}</span>`).join("");
+    return `<div class="saved-card">
+      <div class="saved-meta">
+        <div>
+          <div class="saved-name">${item.nom}</div>
+          <div class="saved-date">Enregistrée le ${item.date} · ${fmt(item.dossier.montant)}€ · ${item.dossier.dep||"N/A"}</div>
+        </div>
+      </div>
+      <div class="saved-tags">${tags}</div>
+      <div class="saved-actions">
+        <button class="btn-sm" onclick="restoreSimulation(${item.id})">🔄 Recharger & relancer</button>
+        <button class="btn-sm danger" onclick="deleteSaved(${item.id})">🗑 Supprimer</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function updateSavedBadge(){
+  const n=getSaved().length;
+  document.getElementById("saved-count-badge").textContent=n>0?"("+n+")":"";
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showTab(id){
+  document.querySelectorAll(".tab-content").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  event.currentTarget.classList.add("active");
+  if(id==="t-saved") renderSaved();
+}
+function tgl(btn){const p=btn.nextElementSibling;const o=p.classList.toggle("open");btn.textContent=o?"▾ Masquer":"▸ Conditions complètes";}
+function v(id){return document.getElementById(id).value;}
+function int(id){return parseInt(document.getElementById(id).value)||0;}
+function fmt(n){return n.toLocaleString("fr-FR");}
+function lpro(v){const m={salarie:"Salarié",retraite:"Retraité",fonctionnaire:"Fonctionnaire",liberal:"Profession libérale",artisan:"Artisan/Commerçant",gerant:"Gérant de société",gerant_sci:"Gérant de SCI",courtier:"Courtier en crédits",rentier:"Rentier"};return m[v]||v;}
+function lobj(v){const m={acq_immo:"Acquisition immo",soulte:"Soulte",travaux_moins75:"Travaux ≤75k€",travaux_plus75:"Travaux 75-300k€",terrain:"Terrain",tresorerie:"Trésorerie",donation:"Donation",succession:"Succession",dette_fiscale:"Dette fiscale",dette_privee:"Dette privée",vehicule:"Véhicule/Loisir",scpi:"Parts SCPI",cca_apport:"Apport CCA",cca_remb:"Remboursement CCA",investissement_pro:"Investissement pro",rachat_conso:"Rachat crédits conso",vefa:"VEFA/Construction",loa:"Reprise LOA",reconstitution_epargne:"Reconstitution épargne"};return m[v]||v;}
+function ltb(v){const m={habitation:"Résidence",mixte_hab_sup:"Bien mixte (hab>pro)",mixte_pro_sup:"Bien mixte (pro≥hab)",pro_bureau:"Bureau/Boutique",pro_autre:"Bien pro autre",garage_seul:"Garage seul",drom:"DROM-COM",chateau:"Château"};return m[v]||v;}
+function resetForm(){
+  document.querySelectorAll("select").forEach(el=>el.selectedIndex=0);
+  document.querySelectorAll("input[type=number]").forEach(el=>{if(el.id==="enfants"||el.id==="crd") el.value="0"; else el.value="";});
+  document.querySelectorAll("input[type=text]").forEach(el=>el.value="");
+  document.getElementById("results").style.display="none";
+  document.getElementById("btn-save").style.display="none";
+}
+
+// Init
+updateSavedBadge();
+</script>
+</body>
+</html>
